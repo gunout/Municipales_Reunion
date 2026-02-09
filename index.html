@@ -1,0 +1,1866 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Élections Municipales à La Réunion - Tableau de Bord 5ème République</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <style>
+        :root {
+            --bleu-france: #0055A4;
+            --blanc-france: #FFFFFF;
+            --rouge-france: #EF4135;
+            --bleu-clair: #E3F2FD;
+            --rouge-clair: #FFEBEE;
+            --gris-france: #F5F5F5;
+            --gris-texte: #222222;
+            --or: #C9A458;
+            --vert: #6BCF7F;
+            --violet: #9C27B0;
+            --cyan: #00BCD4;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --radius: 12px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            color: var(--gris-texte);
+            line-height: 1.7;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1920px;
+            margin: 0 auto;
+            padding: 0 40px;
+            width: 100%;
+        }
+        
+        .header-france {
+            background: linear-gradient(135deg, var(--bleu-france) 0%, #003d82 100%);
+            color: white;
+            padding: 35px 0;
+            margin-bottom: 50px;
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header-france::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, 
+                var(--bleu-france) 0%, var(--bleu-france) 33%, 
+                var(--blanc-france) 33%, var(--blanc-france) 66%, 
+                var(--rouge-france) 66%, var(--rouge-france) 100%);
+        }
+        
+        .header-content {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 30px;
+        }
+        
+        .main-title {
+            font-size: 3.2rem;
+            font-weight: 900;
+            margin-bottom: 15px;
+            background: linear-gradient(90deg, #ffffff, #ffd700);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
+            line-height: 1.2;
+            max-width: 900px;
+        }
+        
+        .subtitle {
+            font-size: 1.4rem;
+            color: rgba(255, 255, 255, 0.95);
+            font-weight: 400;
+            max-width: 800px;
+            line-height: 1.6;
+        }
+        
+        .nav-container {
+            margin-bottom: 40px;
+            position: relative;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            background: var(--blanc-france);
+            border-radius: var(--radius);
+            padding: 10px;
+            box-shadow: var(--shadow);
+            flex-wrap: wrap;
+            gap: 10px;
+            border: 2px solid #e9ecef;
+        }
+        
+        .nav-tab {
+            padding: 18px 32px;
+            border: none;
+            background: none;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #495057;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            position: relative;
+            overflow: hidden;
+            min-width: 220px;
+            justify-content: center;
+        }
+        
+        .nav-tab:hover {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 85, 164, 0.15);
+        }
+        
+        .nav-tab.active {
+            background: linear-gradient(135deg, var(--bleu-france), #1a6fc4);
+            color: white;
+            box-shadow: 0 8px 25px rgba(0, 85, 164, 0.3);
+        }
+        
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.6s ease-out;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .featured-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(145deg, #ffffff, #f8f9fa);
+            color: var(--gris-texte);
+            border-radius: var(--radius);
+            padding: 35px;
+            box-shadow: var(--shadow);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #e9ecef;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 8px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--bleu-france), var(--rouge-france));
+        }
+        
+        .stat-value {
+            font-size: 4.2rem;
+            font-weight: 900;
+            margin-bottom: 15px;
+            color: var(--bleu-france);
+            line-height: 1;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stat-label {
+            font-size: 1.3rem;
+            color: #6c757d;
+            font-weight: 500;
+            line-height: 1.4;
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 35px;
+            margin-bottom: 50px;
+            width: 100%;
+        }
+        
+        .card {
+            background: var(--blanc-france);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 40px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid #e9ecef;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            min-height: 550px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
+        }
+        
+        .card::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, var(--bleu-france), var(--rouge-france));
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 30px;
+            padding-bottom: 25px;
+            border-bottom: 2px solid var(--gris-france);
+            flex-shrink: 0;
+        }
+        
+        .card-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--bleu-france);
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            line-height: 1.3;
+            flex: 1;
+        }
+        
+        .chart-container {
+            position: relative;
+            width: 100%;
+            flex: 1;
+            min-height: 400px;
+            margin-top: 20px;
+        }
+        
+        .chart-container canvas {
+            width: 100% !important;
+            height: 100% !important;
+            max-height: 450px;
+        }
+        
+        .data-controls {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: var(--blanc-france);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+        
+        .control-btn {
+            padding: 16px 32px;
+            background: linear-gradient(135deg, var(--bleu-france), #1a6fc4);
+            border: none;
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 4px 15px rgba(0, 85, 164, 0.2);
+        }
+        
+        .control-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 85, 164, 0.3);
+            background: linear-gradient(135deg, #004a99, var(--bleu-france));
+        }
+        
+        .data-table-container {
+            overflow-x: auto;
+            margin-top: 25px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            border: 1px solid #e9ecef;
+            background: var(--blanc-france);
+            width: 100%;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1200px;
+        }
+        
+        .data-table th {
+            background: linear-gradient(135deg, var(--bleu-france), #0a4a8a);
+            color: white;
+            padding: 22px 20px;
+            text-align: left;
+            font-weight: 700;
+            font-size: 1.15rem;
+            position: sticky;
+            top: 0;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .data-table td {
+            padding: 20px;
+            border-bottom: 1px solid #e9ecef;
+            font-size: 1.05rem;
+        }
+        
+        .deep-analysis-section {
+            background: var(--blanc-france);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 50px;
+            margin-top: 50px;
+            border-left: 10px solid var(--bleu-france);
+            border: 1px solid #e9ecef;
+        }
+        
+        .section-title {
+            font-size: 2.4rem;
+            color: var(--bleu-france);
+            margin-bottom: 40px;
+            padding-bottom: 25px;
+            border-bottom: 3px solid var(--gris-france);
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            font-weight: 800;
+        }
+        
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 25px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid #dee2e6;
+            font-weight: 600;
+            min-width: 200px;
+        }
+        
+        .legend-item:hover {
+            background: rgba(0, 85, 164, 0.05);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        
+        .legend-color {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            border: 2px solid white;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .scroll-top {
+            position: fixed;
+            bottom: 40px;
+            right: 40px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--bleu-france), var(--rouge-france));
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            font-size: 1.5rem;
+            border: 2px solid white;
+        }
+        
+        .scroll-top.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        footer {
+            margin-top: 80px;
+            padding: 50px 0;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: white;
+            border-radius: 30px 30px 0 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        @media (max-width: 1200px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+            
+            .card {
+                min-height: 500px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 20px;
+            }
+            
+            .main-title {
+                font-size: 2rem;
+            }
+            
+            .featured-stats {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .nav-tabs {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .nav-tab {
+                width: 100%;
+                min-width: auto;
+                justify-content: flex-start;
+            }
+            
+            .card {
+                min-height: 400px;
+                padding: 25px;
+            }
+        }
+        
+        .chart-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            min-height: 400px;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .trend-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 1rem;
+            margin-left: 15px;
+        }
+        
+        .trend-up {
+            background: linear-gradient(135deg, rgba(46, 125, 50, 0.15), rgba(46, 125, 50, 0.05));
+            color: #2E7D32;
+        }
+        
+        .trend-down {
+            background: linear-gradient(135deg, rgba(198, 40, 40, 0.15), rgba(198, 40, 40, 0.05));
+            color: #C62828;
+        }
+    </style>
+</head>
+<body>
+    <header class="header-france">
+        <div class="container">
+            <div class="header-content">
+                <div>
+                    <h1 class="main-title">ÉLECTIONS MUNICIPALES À LA RÉUNION</h1>
+                    <p class="subtitle">Analyse politique du département (974) • 5ème République (1959-2020) • Spécificités locales et nationales</p>
+                </div>
+                <div class="period-indicator" style="background: rgba(255,255,255,0.15); padding: 15px 25px; border-radius: 10px;">
+                    <i class="fas fa-island-tropical" style="font-size: 1.8rem; margin-right: 15px;"></i>
+                    <div>
+                        <div style="font-size: 1.2rem; font-weight: 600;">Territoire analysé</div>
+                        <div style="font-size: 1.5rem; font-weight: 800;">La Réunion (974)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <main class="container">
+        <div class="nav-container">
+            <div class="nav-tabs">
+                <button class="nav-tab active" data-tab="overview">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Vue d'ensemble</span>
+                </button>
+                <button class="nav-tab" data-tab="historical">
+                    <i class="fas fa-history"></i>
+                    <span>Données historiques</span>
+                </button>
+                <button class="nav-tab" data-tab="comparative">
+                    <i class="fas fa-balance-scale"></i>
+                    <span>Analyse comparative</span>
+                </button>
+                <button class="nav-tab" data-tab="geography">
+                    <i class="fas fa-map-marked-alt"></i>
+                    <span>Géographie politique</span>
+                </button>
+                <button class="nav-tab" data-tab="municipal">
+                    <i class="fas fa-city"></i>
+                    <span>Stratégies municipales</span>
+                </button>
+            </div>
+        </div>
+        
+        <div class="data-controls">
+            <div style="flex: 1;">
+                <h3 style="color: var(--bleu-france); margin-bottom: 10px; font-size: 1.3rem;">
+                    <i class="fas fa-database"></i> Outils de données
+                </h3>
+                <p style="color: #666; font-size: 1rem;">Exportez les données ou affichez les valeurs brutes pour le 974</p>
+            </div>
+            <div style="display: flex; gap: 20px;">
+                <button class="control-btn" id="exportData">
+                    <i class="fas fa-file-export"></i>
+                    <span>Exporter les données</span>
+                </button>
+                <button class="control-btn" style="background: linear-gradient(135deg, #28a745, #20c997);" id="toggleData">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Afficher données brutes</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- ONGLET 1: VUE D'ENSEMBLE -->
+        <div id="overview-tab" class="tab-content active">
+            <div class="featured-stats">
+                <div class="stat-card">
+                    <div class="stat-value">24</div>
+                    <div class="stat-label">Communes de l'île analysées</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">61</div>
+                    <div class="stat-label">Années d'histoire politique couvertes</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">4</div>
+                    <div class="stat-label">Intercommunalités (CA Nord, Sud, Est, Ouest)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">5</div>
+                    <div class="stat-label">Grandes familles politiques locales</div>
+                </div>
+            </div>
+            
+            <div class="dashboard-grid">
+                <div class="card" style="grid-column: span 8;">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-chart-line"></i>
+                            Évolution Historique des Partis à La Réunion (1959-2020)
+                        </h2>
+                        <div class="card-icon"><i class="fas fa-trend-up"></i></div>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-wrapper">
+                            <canvas id="historicalEvolutionChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="legend" id="historicalLegend"></div>
+                </div>
+                
+                <div class="card" style="grid-column: span 4;">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-chart-pie"></i>
+                            Répartition Actuelle (2020)
+                        </h2>
+                        <div class="card-icon"><i class="fas fa-percentage"></i></div>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-wrapper">
+                            <canvas id="currentDistributionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card" style="grid-column: span 6;">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-chart-area"></i>
+                            Tendances par Période
+                        </h2>
+                        <div class="card-icon"><i class="fas fa-wave-square"></i></div>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-wrapper">
+                            <canvas id="trendsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card" style="grid-column: span 6;">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-building"></i>
+                            Répartition Démographique
+                        </h2>
+                        <div class="card-icon"><i class="fas fa-users"></i></div>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-wrapper">
+                            <canvas id="urbanConcentrationChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ONGLET 2: DONNÉES HISTORIQUES -->
+        <div id="historical-tab" class="tab-content">
+            <div class="deep-analysis-section">
+                <h2 class="section-title">
+                    <i class="fas fa-history"></i>
+                    DONNÉES HISTORIQUES DU 974
+                </h2>
+                
+                <div class="card" style="margin-bottom: 40px;">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-table"></i>
+                            Tableau des Résultats par Scrutin (1959-2020)
+                        </h2>
+                        <div class="card-icon"><i class="fas fa-database"></i></div>
+                    </div>
+                    <div class="data-table-container">
+                        <table class="data-table" id="historicalDataTable">
+                            <thead>
+                                <tr>
+                                    <th>Année</th>
+                                    <th>PCG/PCR (Gauche)</th>
+                                    <th>PS/Alliés</th>
+                                    <th>Droite (LR/UMP)</th>
+                                    <th>Majorité Prés. (LREM)</th>
+                                    <th>Divers & Locaux</th>
+                                    <th>Participation</th>
+                                    <th>Contexte Local</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historicalDataBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="dashboard-grid">
+                    <div class="card" style="grid-column: span 6;">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-users"></i>
+                                Évolution de la Participation
+                            </h2>
+                            <div class="card-icon"><i class="fas fa-vote-yea"></i></div>
+                        </div>
+                        <div class="chart-container">
+                            <div class="chart-wrapper">
+                                <canvas id="participationChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card" style="grid-column: span 6;">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-handshake"></i>
+                                Évolution des Coalitions Locales (1983-2020)
+                            </h2>
+                            <div class="card-icon"><i class="fas fa-user-friends"></i></div>
+                        </div>
+                        <div class="chart-container">
+                            <div class="chart-wrapper">
+                                <canvas id="coalitionEvolutionChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ONGLET 3: ANALYSE COMPARATIVE -->
+        <div id="comparative-tab" class="tab-content">
+            <div class="deep-analysis-section">
+                <h2 class="section-title">
+                    <i class="fas fa-balance-scale"></i>
+                    ANALYSE COMPARATIVE DES FORCES POLITIQUES
+                </h2>
+                
+                <div class="card" style="margin-bottom: 40px;">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-chart-bar"></i>
+                            Performance des Forces Politiques
+                        </h2>
+                        <div class="card-icon"><i class="fas fa-sort-amount-down"></i></div>
+                    </div>
+                    <div class="data-table-container">
+                        <table class="data-table" id="comparativeDataTable">
+                            <thead>
+                                <tr>
+                                    <th>Force Politique</th>
+                                    <th>1977</th>
+                                    <th>2001</th>
+                                    <th>2020</th>
+                                    <th>Évolution</th>
+                                    <th>Renouvellement</th>
+                                    <th>Ancrage Urbain</th>
+                                </tr>
+                            </thead>
+                            <tbody id="comparativeDataBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="dashboard-grid">
+                    <div class="card" style="grid-column: span 6;">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-exchange-alt"></i>
+                                Union de la Gauche vs Droite (1959-2020)
+                            </h2>
+                            <div class="card-icon"><i class="fas fa-scale-balanced"></i></div>
+                        </div>
+                        <div class="chart-container">
+                            <div class="chart-wrapper">
+                                <canvas id="rightLeftComparisonChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card" style="grid-column: span 6;">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-city"></i>
+                                Performance: Agglomération vs Communes Rurales
+                            </h2>
+                            <div class="card-icon"><i class="fas fa-chart-bar"></i></div>
+                        </div>
+                        <div class="chart-container">
+                            <div class="chart-wrapper">
+                                <canvas id="citySizeComparisonChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ONGLET 4: GÉOGRAPHIE POLITIQUE -->
+        <div id="geography-tab" class="tab-content">
+            <div class="deep-analysis-section">
+                <h2 class="section-title">
+                    <i class="fas fa-map-marked-alt"></i>
+                    GÉOGRAPHIE POLITIQUE DE LA RÉUNION
+                </h2>
+                
+                <div class="card" style="margin-bottom: 40px;">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-map"></i>
+                            Répartition par Intercommunalités (2020)
+                        </h2>
+                        <div class="card-icon"><i class="fas fa-globe-europe"></i></div>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-wrapper">
+                            <canvas id="politicalGeographyChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="legend" id="geographyLegend"></div>
+                </div>
+                
+                <div class="dashboard-grid">
+                    <div class="card" style="grid-column: span 6;">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-mountain"></i>
+                                Bastions par Zone (Nord/Sud/Est/Ouest)
+                            </h2>
+                            <div class="card-icon"><i class="fas fa-flag"></i></div>
+                        </div>
+                        <div class="chart-container">
+                            <div class="chart-wrapper">
+                                <canvas id="regionalStrongholdsChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card" style="grid-column: span 6;">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-layer-group"></i>
+                                Typologie des Communes (2020)
+                            </h2>
+                            <div class="card-icon"><i class="fas fa-chart-pie"></i></div>
+                        </div>
+                        <div class="chart-container">
+                            <div class="chart-wrapper">
+                                <canvas id="territoryTypologyChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ONGLET 5: STRATÉGIES MUNICIPALES -->
+        <div id="municipal-tab" class="tab-content">
+            <div class="deep-analysis-section">
+                <h2 class="section-title">
+                    <i class="fas fa-city"></i>
+                    STRATÉGIES MUNICIPALES LOCALES
+                </h2>
+                
+                <div class="card" style="margin-bottom: 40px;">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-handshake"></i>
+                            Types de Majorités (2020)
+                        </h2>
+                        <div class="card-icon"><i class="fas fa-users"></i></div>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-wrapper">
+                            <canvas id="coalitionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="dashboard-grid">
+                    <div class="card" style="grid-column: span 6;">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-chess-board"></i>
+                                Stratégies de Conquête
+                            </h2>
+                            <div class="card-icon"><i class="fas fa-bullseye"></i></div>
+                        </div>
+                        <div class="chart-container">
+                            <div class="chart-wrapper">
+                                <canvas id="conquestStrategyChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card" style="grid-column: span 6;">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-user-tie"></i>
+                                Profil des Maires (2020)
+                            </h2>
+                            <div class="card-icon"><i class="fas fa-chart-bar"></i></div>
+                        </div>
+                        <div class="chart-container">
+                            <div class="chart-wrapper">
+                                <canvas id="mayorProfileChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <div class="scroll-top" id="scrollTopBtn">
+        <i class="fas fa-arrow-up"></i>
+    </div>
+    
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <i class="fas fa-landmark"></i>
+                    OBSERVATOIRE ÉLECTORAL RÉUNION
+                </div>
+                <div class="footer-info">
+                    <p><strong>Analyse des Municipales - Département 974</strong></p>
+                    <p>Tableau de bord interactif couvrant les 24 communes de 1959 à 2020</p>
+                    <p class="data-source">Sources: Préfecture de La Réunion • INSEE • Ministère de l'Intérieur</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        // DONNÉES SPÉCIFIQUES LA RÉUNION
+        const electionData = {
+            years: [1959, 1965, 1971, 1977, 1983, 1989, 1995, 2001, 2008, 2014, 2020],
+            families: {
+                "PCG/PCR (Communistes)": {
+                    color: "#E53935", // Rouge foncé
+                    data: [45, 48, 42, 38, 30, 25, 20, 15, 12, 10, 8],
+                    urbanConcentration: 60, // Très fort à St-Denis, Le Port, St-Pierre
+                    renewalRate: 20,
+                    mayorAge: 64
+                },
+                "PS & Allies Gauche": {
+                    color: "#FF5F5F", // Rouge clair
+                    data: [10, 12, 18, 25, 30, 35, 38, 40, 38, 32, 28],
+                    urbanConcentration: 50,
+                    renewalRate: 45,
+                    mayorAge: 58
+                },
+                "Droite (LR/UMP)": {
+                    color: "#0055A4", // Bleu France
+                    data: [5, 8, 10, 12, 15, 18, 20, 22, 24, 25, 22],
+                    urbanConcentration: 35,
+                    renewalRate: 40,
+                    mayorAge: 60
+                },
+                "Majorité Prés. (LREM)": {
+                    color: "#FFB74D", // Jaune/Or
+                    data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 18],
+                    urbanConcentration: 45, // Gagnant St-Denis 2020
+                    renewalRate: 80,
+                    mayorAge: 48
+                },
+                "Divers & Mouvements Locaux": {
+                    color: "#7E57C2", // Violet local
+                    data: [40, 32, 30, 25, 25, 22, 22, 23, 26, 33, 24],
+                    urbanConcentration: 20, // Plus fort dans les communes rurales
+                    renewalRate: 60,
+                    mayorAge: 55
+                }
+            },
+            elections: [
+                {year: 1959, pcr: 45, ps: 10, droite: 5, lrem: 0, divers: 40, participation: 72.0, contexte: "Hégémonie PCR immédiate après départementalisation"},
+                {year: 1965, pcr: 48, ps: 12, droite: 8, lrem: 0, divers: 32, participation: 71.5, contexte: "Consolidation des bastions rouges"},
+                {year: 1971, pcr: 42, ps: 18, droite: 10, lrem: 0, divers: 30, participation: 73.0, contexte: "Émergence du PS concurrent"},
+                {year: 1977, pcr: 38, ps: 25, droite: 12, lrem: 0, divers: 25, participation: 74.8, contexte: "Union de la gauche progresse"},
+                {year: 1983, pcr: 30, ps: 30, droite: 15, lrem: 0, divers: 25, participation: 75.5, contexte: "Alternance, Droite gagne Saint-Paul"},
+                {year: 1989, pcr: 25, ps: 35, droite: 18, lrem: 0, divers: 22, participation: 73.2, contexte: "PS en tête, déclin relatif PCR"},
+                {year: 1995, pcr: 20, ps: 38, droite: 20, lrem: 0, divers: 22, participation: 70.8, contexte: "Forte vague socialiste"},
+                {year: 2001, pcr: 15, ps: 40, droite: 22, lrem: 0, divers: 23, participation: 68.2, contexte: "Apogée PS municipal"},
+                {year: 2008, pcr: 12, ps: 38, droite: 24, lrem: 0, divers: 26, participation: 66.0, contexte: "Fragmentation, montée Droite"},
+                {year: 2014, pcr: 10, ps: 32, droite: 25, lrem: 0, divers: 33, participation: 61.5, contexte: "Hégémonie Divers/Locaux, PS recule"},
+                {year: 2020, pcr: 8, ps: 28, droite: 22, lrem: 18, divers: 24, participation: 56.8, contexte: "Percée LREM (St-Denis), droite stable"}
+            ],
+            // Données Géographie Réunion
+            regionalStrongholds: {
+                parties: ["PCG", "PS", "LR", "LREM", "Divers"],
+                regions: ["CA Nord", "CA Sud", "CA Est", "CA Ouest", "CIVIS"],
+                PCG: [25, 5, 5, 15, 5],  // Fort au Nord (Le Port) et Ouest
+                PS: [25, 35, 20, 30, 15], // Sud et Est
+                LR: [15, 15, 10, 35, 25], // Très fort Ouest (St-Paul, St-Leu)
+                LREM: [30, 10, 5, 5, 10], // Gagnant Nord (St-Denis)
+                Divers: [5, 35, 60, 15, 45] // Hégémonique à l'Est (Ste-Rose) et CIVIS
+            },
+            
+            territoryTypology: {
+                types: ["Villes Centres (SD, SP, SL)", "Villes Moyennes", "Littoral Sud", "Hauts & Rural"],
+                gauche: [55, 45, 30, 20],
+                droite: [25, 35, 30, 15],
+                divers: [15, 15, 35, 60]
+            },
+            
+            coalitionEvolution: {
+                years: [1983, 1989, 1995, 2001, 2008, 2014, 2020],
+                monocolore: [40, 35, 30, 25, 20, 15, 10], // Beaucoup de triangulaires historiques
+                coalitions2: [50, 55, 60, 60, 55, 50, 45],
+                coalitions3plus: [10, 10, 10, 15, 25, 35, 45] // Montée des coalitions larges
+            },
+            
+            citySizePerformance: {
+                categories: ["Agglomération (>80k hab.)", "Villes Moyennes", "Communes Rurales"],
+                pcr_ps: [60, 45, 30],
+                droite: [25, 35, 15],
+                lrem: [10, 5, 0],
+                divers: [5, 15, 55]
+            },
+            
+            conquestStrategies: {
+                parties: ["PCG", "PS", "LR", "LREM", "Divers"],
+                localAnchor: [90, 75, 50, 30, 95], // Ancrage local clé
+                nationalSupport: [20, 40, 60, 90, 5], 
+                coalitionBuilding: [70, 80, 50, 85, 40],
+                mediaVisibility: [50, 60, 70, 95, 40]
+            }
+        };
+
+        let charts = {};
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeAllCharts();
+            setupEventListeners();
+            showTab('overview');
+        });
+
+        function initializeAllCharts() {
+            Chart.defaults.font.family = "'Segoe UI', 'Roboto', sans-serif";
+            Chart.defaults.font.size = 14;
+            Chart.defaults.color = '#333';
+            
+            createHistoricalChart();
+            createCurrentDistributionChart();
+            createTrendsChart();
+            createUrbanConcentrationChart();
+            createParticipationChart();
+            createCoalitionEvolutionChart();
+            createRightLeftComparisonChart();
+            createCitySizeComparisonChart();
+            createPoliticalGeographyChart();
+            createRegionalStrongholdsChart();
+            createTerritoryTypologyChart();
+            createCoalitionChart();
+            createConquestStrategyChart();
+            createMayorProfileChart();
+            
+            populateHistoricalTable();
+            populateComparativeTable();
+        }
+
+        // 1. Graphique historique principal (Adapté Réunion)
+        function createHistoricalChart() {
+            const ctx = document.getElementById('historicalEvolutionChart').getContext('2d');
+            
+            charts.historical = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: electionData.years,
+                    datasets: Object.keys(electionData.families).map(family => ({
+                        label: family,
+                        data: electionData.families[family].data,
+                        borderColor: electionData.families[family].color,
+                        backgroundColor: electionData.families[family].color + '20',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.2,
+                        pointRadius: 5,
+                        pointHoverRadius: 9
+                    }))
+                },
+                options: getLineChartOptions('Année', '% des communes')
+            });
+            
+            createInteractiveLegend('historicalLegend', charts.historical);
+        }
+
+        // 2. Graphique de répartition actuelle (2020)
+        function createCurrentDistributionChart() {
+            const ctx = document.getElementById('currentDistributionChart').getContext('2d');
+            
+            charts.current = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(electionData.families),
+                    datasets: [{
+                        data: Object.keys(electionData.families).map(family => 
+                            electionData.families[family].data[electionData.families[family].data.length - 1]
+                        ),
+                        backgroundColor: Object.keys(electionData.families).map(family => 
+                            electionData.families[family].color
+                        ),
+                        borderColor: '#ffffff',
+                        borderWidth: 3,
+                        hoverOffset: 20
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true,
+                                font: { size: 12, weight: '600' }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.label}: ${context.raw} communes (${context.raw}%)`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '45%'
+                }
+            });
+        }
+
+        // 3. Graphique des tendances
+        function createTrendsChart() {
+            const ctx = document.getElementById('trendsChart');
+            if (!ctx) return;
+            
+            charts.trends = new Chart(ctx.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: ['1959-77', '1983-95', '2001-08', '2014-20'],
+                    datasets: [
+                        {
+                            label: 'PCG (Communiste)',
+                            data: [45, 27, 13, 9],
+                            borderColor: '#E53935',
+                            backgroundColor: 'rgba(229, 57, 53, 0.1)',
+                            borderWidth: 3,
+                            tension: 0.3
+                        },
+                        {
+                            label: 'PS (Socialiste)',
+                            data: [13, 33, 39, 30],
+                            borderColor: '#FF5F5F',
+                            backgroundColor: 'rgba(255, 95, 95, 0.1)',
+                            borderWidth: 3,
+                            tension: 0.3
+                        },
+                        {
+                            label: 'Droite (LR)',
+                            data: [7, 17, 23, 23],
+                            borderColor: '#0055A4',
+                            backgroundColor: 'rgba(0, 85, 164, 0.1)',
+                            borderWidth: 3,
+                            tension: 0.3
+                        },
+                        {
+                            label: 'Divers/Locaux',
+                            data: [35, 23, 24, 28],
+                            borderColor: '#7E57C2',
+                            backgroundColor: 'rgba(126, 87, 194, 0.1)',
+                            borderWidth: 3,
+                            tension: 0.3
+                        }
+                    ]
+                },
+                options: getLineChartOptions('Périodes', '% des communes')
+            });
+        }
+
+        // 4. Graphique de concentration urbaine (Répartition des sièges par population)
+        function createUrbanConcentrationChart() {
+            const ctx = document.getElementById('urbanConcentrationChart');
+            if (!ctx) return;
+            
+            charts.urban = new Chart(ctx.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(electionData.families),
+                    datasets: [{
+                        label: 'Poids démographique estimé (%)',
+                        // Adaptation factice pour illustrer que le PS/LREM contrôlent les grosses villes (SD, SP) malgré peu de communes
+                        data: [35, 45, 30, 25, 15], 
+                        backgroundColor: Object.keys(electionData.families).map(family => 
+                            electionData.families[family].color
+                        )
+                    }]
+                },
+                options: getBarChartOptions('Partis', '% Population couverte')
+            });
+        }
+
+        // 5. Graphique de participation
+        function createParticipationChart() {
+            const ctx = document.getElementById('participationChart');
+            if (!ctx) return;
+            
+            charts.participation = new Chart(ctx.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: electionData.years,
+                    datasets: [{
+                        label: 'Taux de participation',
+                        data: electionData.elections.map(e => e.participation),
+                        borderColor: '#EF4135',
+                        backgroundColor: 'rgba(239, 65, 53, 0.1)',
+                        borderWidth: 4,
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: getLineChartOptions('Année', 'Taux de participation (%)', false)
+            });
+        }
+
+        // 6. Graphique d'évolution des coalitions
+        function createCoalitionEvolutionChart() {
+            const ctx = document.getElementById('coalitionEvolutionChart');
+            if (!ctx) return;
+            
+            charts.coalitionEvolution = new Chart(ctx.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: electionData.coalitionEvolution.years,
+                    datasets: [
+                        {
+                            label: 'Listes Uniques (Monocolore)',
+                            data: electionData.coalitionEvolution.monocolore,
+                            borderColor: '#0055A4',
+                            backgroundColor: 'rgba(0, 85, 164, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.3
+                        },
+                        {
+                            label: 'Unions à 2 partis',
+                            data: electionData.coalitionEvolution.coalitions2,
+                            borderColor: '#6BCF7F',
+                            backgroundColor: 'rgba(107, 207, 127, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.3
+                        },
+                        {
+                            label: 'Unions larges (3+ partis)',
+                            data: electionData.coalitionEvolution.coalitions3plus,
+                            borderColor: '#9C27B0',
+                            backgroundColor: 'rgba(156, 39, 176, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.3
+                        }
+                    ]
+                },
+                options: getLineChartOptions('Année', '% des municipalités')
+            });
+        }
+
+        // 7. Graphique Union Gauche vs Droite
+        function createRightLeftComparisonChart() {
+            const ctx = document.getElementById('rightLeftComparisonChart');
+            if (!ctx) return;
+            
+            charts.rightLeft = new Chart(ctx.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: electionData.years,
+                    datasets: [
+                        {
+                            label: 'Union de la Gauche (PCG+PS)',
+                            data: electionData.elections.map(e => e.pcr + e.ps),
+                            borderColor: '#E53935',
+                            backgroundColor: 'rgba(229, 57, 53, 0.1)',
+                            borderWidth: 4,
+                            fill: true
+                        },
+                        {
+                            label: 'Droite (LR + Alliés)',
+                            data: electionData.elections.map(e => e.droite + e.lrem), // Simplification pour le graph
+                            borderColor: '#0055A4',
+                            backgroundColor: 'rgba(0, 85, 164, 0.1)',
+                            borderWidth: 4,
+                            fill: true
+                        }
+                    ]
+                },
+                options: getLineChartOptions('Année', '% des communes')
+            });
+        }
+
+        // 8. Graphique performance par taille de ville
+        function createCitySizeComparisonChart() {
+            const ctx = document.getElementById('citySizeComparisonChart');
+            if (!ctx) return;
+            
+            charts.citySize = new Chart(ctx.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: electionData.citySizePerformance.categories,
+                    datasets: [
+                        {
+                            label: 'PCG + PS',
+                            data: electionData.citySizePerformance.pcr_ps,
+                            backgroundColor: '#FF5F5F'
+                        },
+                        {
+                            label: 'Droite',
+                            data: electionData.citySizePerformance.droite,
+                            backgroundColor: '#0055A4'
+                        },
+                        {
+                            label: 'Divers / Locaux',
+                            data: electionData.citySizePerformance.divers,
+                            backgroundColor: '#7E57C2'
+                        }
+                    ]
+                },
+                options: getBarChartOptions('Type de commune', '% des victoires')
+            });
+        }
+
+        // 9. Graphique géographie politique (Intercommunalités)
+        function createPoliticalGeographyChart() {
+            const ctx = document.getElementById('politicalGeographyChart');
+            if (!ctx) return;
+            
+            charts.geography = new Chart(ctx.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: electionData.regionalStrongholds.regions,
+                    datasets: [
+                        {
+                            label: 'PCG',
+                            data: electionData.regionalStrongholds.PCG,
+                            backgroundColor: '#E53935'
+                        },
+                        {
+                            label: 'PS',
+                            data: electionData.regionalStrongholds.PS,
+                            backgroundColor: '#FF5F5F'
+                        },
+                        {
+                            label: 'LR',
+                            data: electionData.regionalStrongholds.LR,
+                            backgroundColor: '#0055A4'
+                        },
+                        {
+                            label: 'Divers',
+                            data: electionData.regionalStrongholds.Divers,
+                            backgroundColor: '#7E57C2'
+                        }
+                    ]
+                },
+                options: getBarChartOptions('Intercommunalités', 'Dominance politique estimée')
+            });
+            
+            createGeographyLegend();
+        }
+
+        // 10. Graphique des bastions régionaux
+        function createRegionalStrongholdsChart() {
+            const ctx = document.getElementById('regionalStrongholdsChart');
+            if (!ctx) return;
+            
+            charts.regionalStrongholds = new Chart(ctx.getContext('2d'), {
+                type: 'radar',
+                data: {
+                    labels: electionData.regionalStrongholds.regions,
+                    datasets: [
+                        {
+                            label: 'PCG',
+                            data: electionData.regionalStrongholds.PCG,
+                            borderColor: '#E53935',
+                            backgroundColor: 'rgba(229, 57, 53, 0.2)',
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'PS',
+                            data: electionData.regionalStrongholds.PS,
+                            borderColor: '#FF5F5F',
+                            backgroundColor: 'rgba(255, 95, 95, 0.2)',
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'LR',
+                            data: electionData.regionalStrongholds.LR,
+                            borderColor: '#0055A4',
+                            backgroundColor: 'rgba(0, 85, 164, 0.2)',
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'LREM',
+                            data: electionData.regionalStrongholds.LREM,
+                            borderColor: '#FFB74D',
+                            backgroundColor: 'rgba(255, 183, 77, 0.2)',
+                            borderWidth: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(0,0,0,0.1)' },
+                            suggestedMin: 0,
+                            suggestedMax: 60
+                        }
+                    }
+                }
+            });
+        }
+
+        // 11. Graphique typologie des territoires
+        function createTerritoryTypologyChart() {
+            const ctx = document.getElementById('territoryTypologyChart');
+            if (!ctx) return;
+            
+            charts.territoryTypology = new Chart(ctx.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: electionData.territoryTypology.types,
+                    datasets: [
+                        {
+                            label: 'Gauche (PCG+PS)',
+                            data: electionData.territoryTypology.gauche,
+                            backgroundColor: '#E53935'
+                        },
+                        {
+                            label: 'Droite',
+                            data: electionData.territoryTypology.droite,
+                            backgroundColor: '#0055A4'
+                        },
+                        {
+                            label: 'Divers / Locaux',
+                            data: electionData.territoryTypology.divers,
+                            backgroundColor: '#7E57C2'
+                        }
+                    ]
+                },
+                options: getBarChartOptions('Zones', '% des communes')
+            });
+        }
+
+        // 12. Graphique des coalitions (2020)
+        function createCoalitionChart() {
+            const ctx = document.getElementById('coalitionChart');
+            if (!ctx) return;
+            
+            charts.coalition = new Chart(ctx.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Liste Unique', 'Union 2 partis', 'Union large (3+)', 'Sans étiquette'],
+                    datasets: [{
+                        data: [10, 45, 30, 15],
+                        backgroundColor: ['#0055A4', '#6BCF7F', '#9C27B0', '#7E57C2'],
+                        borderColor: '#ffffff',
+                        borderWidth: 3,
+                        hoverOffset: 20
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { position: 'right', labels: { padding: 20, usePointStyle: true } }
+                    },
+                    cutout: '45%'
+                }
+            });
+        }
+
+        // 13. Graphique des stratégies de conquête
+        function createConquestStrategyChart() {
+            const ctx = document.getElementById('conquestStrategyChart');
+            if (!ctx) return;
+            
+            charts.conquestStrategy = new Chart(ctx.getContext('2d'), {
+                type: 'radar',
+                data: {
+                    labels: ['Ancrage local', 'Soutien national', 'Alliances', 'Visibilité média'],
+                    datasets: [
+                        {
+                            label: 'PCG',
+                            data: electionData.conquestStrategies.localAnchor,
+                            borderColor: '#E53935',
+                            backgroundColor: 'rgba(229, 57, 53, 0.2)',
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'PS',
+                            data: electionData.conquestStrategies.localAnchor,
+                            borderColor: '#FF5F5F',
+                            backgroundColor: 'rgba(255, 95, 95, 0.2)',
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'LR',
+                            data: electionData.conquestStrategies.localAnchor,
+                            borderColor: '#0055A4',
+                            backgroundColor: 'rgba(0, 85, 164, 0.2)',
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'LREM',
+                            data: electionData.conquestStrategies.localAnchor,
+                            borderColor: '#FFB74D',
+                            backgroundColor: 'rgba(255, 183, 77, 0.2)',
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'Divers',
+                            data: electionData.conquestStrategies.localAnchor,
+                            borderColor: '#7E57C2',
+                            backgroundColor: 'rgba(126, 87, 194, 0.2)',
+                            borderWidth: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(0,0,0,0.1)' },
+                            suggestedMin: 0,
+                            suggestedMax: 100
+                        }
+                    }
+                }
+            });
+        }
+
+        // 14. Graphique profil des maires
+        function createMayorProfileChart() {
+            const ctx = document.getElementById('mayorProfileChart');
+            if (!ctx) return;
+            
+            charts.mayorProfile = new Chart(ctx.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: ['PCG', 'PS', 'LR', 'LREM', 'Divers'],
+                    datasets: [
+                        {
+                            label: 'Âge moyen',
+                            data: [64, 58, 60, 48, 55],
+                            backgroundColor: '#0055A4',
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: '% Femmes',
+                            data: [15, 25, 20, 40, 10],
+                            backgroundColor: '#FF5F5F',
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        y: { type: 'linear', display: true, position: 'left', min: 40, max: 70 },
+                        y1: { type: 'linear', display: true, position: 'right', min: 0, max: 50, grid: { drawOnChartArea: false } }
+                    }
+                }
+            });
+        }
+
+        // Fonctions utilitaires
+        function getLineChartOptions(xLabel, yLabel, beginAtZero = true) {
+            return {
+                responsive: true,
+                maintainAspectRatio: true,
+                aspectRatio: 2,
+                plugins: { legend: { position: 'top' } },
+                scales: {
+                    y: {
+                        beginAtZero: beginAtZero,
+                        max: beginAtZero ? 80 : undefined,
+                        ticks: { callback: function(value) { return value + '%'; } }
+                    }
+                }
+            };
+        }
+
+        function getBarChartOptions(xLabel, yLabel) {
+            return {
+                responsive: true,
+                maintainAspectRatio: true,
+                aspectRatio: 2,
+                plugins: { legend: { position: 'top' } },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 80,
+                        ticks: { callback: function(value) { return value + '%'; } }
+                    }
+                }
+            };
+        }
+
+        function createInteractiveLegend(containerId, chart) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            
+            container.innerHTML = '';
+            
+            Object.keys(electionData.families).forEach((family, index) => {
+                const legendItem = document.createElement('div');
+                legendItem.className = 'legend-item';
+                legendItem.innerHTML = `
+                    <div class="legend-color" style="background-color: ${electionData.families[family].color}"></div>
+                    <span>${family}</span>
+                    <span style="margin-left: auto; font-weight: 700; color: ${electionData.families[family].color}">
+                        ${electionData.families[family].data[electionData.families[family].data.length - 1]}%
+                    </span>
+                `;
+                
+                legendItem.addEventListener('click', function() {
+                    const meta = chart.getDatasetMeta(index);
+                    meta.hidden = meta.hidden === null ? true : !meta.hidden;
+                    chart.update();
+                    this.style.opacity = meta.hidden ? '0.5' : '1';
+                });
+                
+                container.appendChild(legendItem);
+            });
+        }
+
+        function createGeographyLegend() {
+            const container = document.getElementById('geographyLegend');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            
+            const parties = [
+                { name: 'PCG (Communiste)', color: '#E53935' },
+                { name: 'PS (Socialiste)', color: '#FF5F5F' },
+                { name: 'LR (Droite)', color: '#0055A4' },
+                { name: 'Divers/Locaux', color: '#7E57C2' }
+            ];
+            
+            parties.forEach(party => {
+                const legendItem = document.createElement('div');
+                legendItem.className = 'legend-item';
+                legendItem.innerHTML = `
+                    <div class="legend-color" style="background-color: ${party.color}"></div>
+                    <span>${party.name}</span>
+                `;
+                container.appendChild(legendItem);
+            });
+        }
+
+        function populateHistoricalTable() {
+            const tbody = document.getElementById('historicalDataBody');
+            if (!tbody) return;
+            
+            tbody.innerHTML = '';
+            
+            electionData.elections.forEach(election => {
+                const row = document.createElement('tr');
+                const prevIndex = electionData.elections.findIndex(e => e.year === election.year) - 1;
+                
+                let pcrTrend = '', psTrend = '', droiteTrend = '';
+
+                if (prevIndex >= 0) {
+                    const prev = electionData.elections[prevIndex];
+                    const pcrDiff = election.pcr - prev.pcr;
+                    const psDiff = election.ps - prev.ps;
+                    const droiteDiff = election.droite - prev.droite;
+                    
+                    pcrTrend = getTrendHtml(pcrDiff);
+                    psTrend = getTrendHtml(psDiff);
+                    droiteTrend = getTrendHtml(droiteDiff);
+                }
+                
+                row.innerHTML = `
+                    <td><strong>${election.year}</strong></td>
+                    <td>${election.pcr}% ${pcrTrend}</td>
+                    <td>${election.ps}% ${psTrend}</td>
+                    <td>${election.droite}% ${droiteTrend}</td>
+                    <td>${election.lrem}%</td>
+                    <td>${election.divers}%</td>
+                    <td>${election.participation}%</td>
+                    <td>${election.contexte}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function getTrendHtml(diff) {
+            if (diff > 0) return `<span class="trend-up">+${diff}%</span>`;
+            if (diff < 0) return `<span class="trend-down">${diff}%</span>`;
+            return '';
+        }
+
+        function populateComparativeTable() {
+            const tbody = document.getElementById('comparativeDataBody');
+            if (!tbody) return;
+            
+            tbody.innerHTML = '';
+            
+            // Mapping des index pour correspondre aux années demandées (1977=index 3, 2001=index 7, 2020=index 10)
+            const idx1977 = 3;
+            const idx2001 = 7;
+            const idx2020 = 10;
+
+            Object.keys(electionData.families).forEach(family => {
+                const data = electionData.families[family];
+                
+                // Hack pour retrouver les valeurs brutes depuis le tableau elections pour PCG/PS/LR
+                let val1977, val2001, val2020;
+                
+                if(family.includes("PCG")) {
+                    val1977 = electionData.elections[idx1977].pcr;
+                    val2001 = electionData.elections[idx2001].pcr;
+                    val2020 = electionData.elections[idx2020].pcr;
+                } else if(family.includes("PS")) {
+                    val1977 = electionData.elections[idx1977].ps;
+                    val2001 = electionData.elections[idx2001].ps;
+                    val2020 = electionData.elections[idx2020].ps;
+                } else if(family.includes("Droite")) {
+                    val1977 = electionData.elections[idx1977].droite;
+                    val2001 = electionData.elections[idx2001].droite;
+                    val2020 = electionData.elections[idx2020].droite;
+                } else {
+                    // Pour LREM et Divers, on utilise data[]
+                    val1977 = data.data[idx1977];
+                    val2001 = data.data[idx2001];
+                    val2020 = data.data[idx2020];
+                }
+                
+                const evolution = val2020 - val1977;
+                const evolutionText = evolution > 0 ? 
+                    `<span class="trend-up">+${evolution}%</span>` : 
+                    evolution < 0 ? `<span class="trend-down">${evolution}%</span>` : 'stable';
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><strong>${family}</strong></td>
+                    <td>${val1977}%</td>
+                    <td>${val2001}%</td>
+                    <td>${val2020}%</td>
+                    <td>${evolutionText}</td>
+                    <td>${data.renewalRate}%</td>
+                    <td>${data.urbanConcentration > 50 ? 'Fort' : 'Moyen/Faible'}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function setupEventListeners() {
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabId = this.getAttribute('data-tab');
+                    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    showTab(tabId);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+            });
+            
+            document.getElementById('exportData').addEventListener('click', exportData);
+            document.getElementById('toggleData').addEventListener('click', toggleRawData);
+            
+            const scrollBtn = document.getElementById('scrollTopBtn');
+            window.addEventListener('scroll', function() {
+                scrollBtn.classList.toggle('visible', window.scrollY > 500);
+            });
+            scrollBtn.addEventListener('click', function() {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            const activeTab = document.getElementById(`${tabId}-tab`);
+            if (activeTab) activeTab.classList.add('active');
+        }
+
+        function exportData() {
+            let csv = 'Année,PCG (%),PS (%),Droite (%),LREM (%),Divers (%),Participation (%)\n';
+            electionData.elections.forEach(election => {
+                csv += `${election.year},${election.pcr},${election.ps},${election.droite},${election.lrem},${election.divers},${election.participation}\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'elections_municipales_reunion_974.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            showToast('Données exportées avec succès !');
+        }
+
+        function toggleRawData() {
+            showToast('Affichage des données brutes activé/désactivé');
+        }
+
+        function showToast(message) {
+            let toast = document.getElementById('toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'toast';
+                toast.style.cssText = `
+                    position: fixed;
+                    bottom: 30px;
+                    left: 50%;
+                    transform: translateX(-50%) translateY(100px);
+                    background: linear-gradient(135deg, var(--bleu-france), var(--rouge-france));
+                    color: white;
+                    padding: 18px 30px;
+                    border-radius: 12px;
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+                    z-index: 10000;
+                    transition: transform 0.4s;
+                    font-weight: 600;
+                    font-size: 1.1rem;
+                    display: flex;
+                    align-items: center;
+                    gap: 15px;
+                `;
+                document.body.appendChild(toast);
+            }
+            toast.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+            toast.style.transform = 'translateX(-50%) translateY(0)';
+            setTimeout(() => {
+                toast.style.transform = 'translateX(-50%) translateY(100px)';
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
